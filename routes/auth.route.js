@@ -34,13 +34,14 @@ router.get('/nonce', async (req, res) => {
 });
 
 router.post('/verify', async (req, res) => {
-  const { type, message, address, signature } = req.body;
+  const { message, address, signature } = req.body;
 
-  if (!type || !address || !signature) {
-    return res.status(400).json({error: 'Missing type, address or signature'});
+  if (!address || !signature) {
+    return res.status(400).json({error: 'Missing address or signature'});
   }
 
   const nonce = await Nonce.findOne({ address }).lean().select('-__v -updatedAt');
+  const type = nonce.type;
 
   try {
     if (type === 'ethereum') {
