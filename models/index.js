@@ -1,29 +1,29 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const NonceSchema = new mongoose.Schema({
-  address: String,
+  walletAddress: String,
   nonce: String,
-  type: String,
-  createdAt: { type: Date, expires: 300, default: Date.now }
+  networkType: String,
+  createdAt: { type: Date, expires: 300, default: Date.now },
 });
 
 const AuthTokenSchema = new mongoose.Schema({
-  address: String,
-  auth_token: String,
-  type: String,
-  createdAt: { type: Date, expires: 3600, default: Date.now }
+  walletAddress: String,
+  authToken: String,
+  networkType: String,
+  createdAt: { type: Date, expires: 3600, default: Date.now },
 });
 
 const UserSchema = new mongoose.Schema({
-  address: { type: String, required: true },
+  walletAddress: { type: String, required: true },
   networkType: { type: String, required: true },
-  profileName: { type: String, required: true, default: 'Anonymous' },
-  publicKey: { type: String, required: true, unique: true }
+  profileName: { type: String, required: true, default: "Anonymous" },
+  publicKey: { type: String, required: true, unique: true },
 });
 
-const Nonce = mongoose.model('Nonce', NonceSchema);
-const AuthToken = mongoose.model('AuthToken', AuthTokenSchema);
-const User = mongoose.model('User', UserSchema);
-User.collection.createIndex({ publicKey: 1 }, { unique: true });
+const Nonces = mongoose.model("Nonce", NonceSchema);
+const AuthTokens = mongoose.model("AuthToken", AuthTokenSchema);
+const Users = mongoose.model("User", UserSchema);
+Users.collection.createIndex({ publicKey: 1 }, { unique: true });
 
-module.exports = { Nonce, AuthToken, User };
+module.exports = { Nonces, AuthTokens, Users };

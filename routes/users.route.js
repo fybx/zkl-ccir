@@ -1,9 +1,13 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router({ mergeParams: true });
 
-const { User } = require('../models/index.js');
+const { Users } = require("../models/index.js");
+const {
+  verifyToken,
+  editProfile,
+} = require("../middlewares/auth.middleware.js");
 
-router.get('/users', async (req, res) => {
+router.get("/", async (req, res) => {
   const { publicKey, address } = req.query;
 
   try {
@@ -16,59 +20,71 @@ router.get('/users', async (req, res) => {
     }
 
     if (!publicKey && !address) {
-      return res.status(400).json({ error: 'Please provide a publicKey or address to search.' });
+      return res
+        .status(400)
+        .json({ error: "Please provide a publicKey or address to search." });
     }
 
-    const users = await User.find(query);
+    const users = await Users.find(query);
 
     if (users.length === 0) {
-      return res.status(404).json({ error: 'No users found matching the criteria.' });
+      return res
+        .status(404)
+        .json({ error: "No users found matching the criteria." });
     }
 
     res.json(users);
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-router.post('/users', async (req, res) => {
+router.post("/", verifyToken, editProfile, async (req, res) => {
+  const { walletAddress, networkType, profileName, publicKey } = req.body;
+
   try {
-    const user = new User({
-      address: req.body.address,
-      networkType: req.body.networkType,
-      profileName: req.body.profileName || 'Anonymous',
-      publicKey: req.body.publicKey
+    const user = new Users({
+      walletAddress,
+      networkType,
+      profileName,
+      publicKey,
     });
-    
+
     await user.save();
     res.status(201).json(user);
-  } catch (err) {
-    if (err.code === 11000) {
-      return res.status(400).json({ error: 'Public key already exists, are you trying to impersonate someone?' });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        error:
+          "Public key already exists, are you trying to impersonate someone?",
+      });
     }
-    res.status(500).json({ error: 'Server error' });
+    console.error(error);
+    res.status(500).json({ error });
   }
 });
 
-router.put('/users/:publicKey', async (req, res) => {
+router.put("/:publicKey", verifyToken, editProfile, async (req, res) => {
+  const { walletAddress, networkType, profileName, publicKey } = req.body;
+
   try {
-    const updatedUser = await User.findOneAndUpdate(
-      { publicKey: req.params.publicKey },
+    const updatedUser = await Users.findOneAndUpdate(
+      { publicKey },
       {
-        address: req.body.address,
-        networkType: req.body.networkType,
-        profileName: req.body.profileName
+        walletAddress,
+        networkType,
+        profileName,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     res.json(updatedUser);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {
+    res.status(500).json({ error });
   }
 });
 
